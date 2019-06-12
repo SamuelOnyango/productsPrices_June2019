@@ -1,0 +1,306 @@
+---
+author: '*Author: [Samuel Onyango](mailto:sam.onyango@oneacrefund.org), Product Innovations Department - OAF Uganda*'
+date: "*June 12^th^, 2019*"
+title: Products' Prices - June 2019
+output:
+  html_document: 
+    code_folding: hide
+    collapsed: yes
+    css: mycss.css
+    keep_md: yes
+    smooth_scroll: yes
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+  
+```{r setup, include=FALSE}
+library(knitr)
+library(farmr)
+library(tidyverse)
+library(cowplot)
+library(plotly)
+library(xtable)
+library(kableExtra)
+library(shiny)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+OAF wanted to know the prices of the Agricultural inputs 
+
+
+# Results from the survey
+
+```{r DataCleaning, include=FALSE}
+# importing the data, it is in my working directory already
+pdtsPrices2019 <- read.csv("pdts_prices_June2019.csv", stringsAsFactors = FALSE)
+
+# What are the variables in the data
+# names(pdtsPrices2019)
+
+# Removing CommCare "number", "formid" and "form_link" variable names
+pdtsPrices2019 <- subset(pdtsPrices2019, select = -c(number, formid, form_link))
+
+# removing "form.consented." that is repeating in the variable names
+names(pdtsPrices2019) <- gsub(pattern = "form.consented.", replacement = "", x = names(pdtsPrices2019))
+
+# Also removing "form." preceding some variable names
+names(pdtsPrices2019) <- gsub(pattern = "form.", replacement = "", x = names(pdtsPrices2019))
+
+names(pdtsPrices2019)
+
+# If you notice there are grouping terms from commcare preceding each pdt and then a dot then  a variable name, eg nabe15 qns have nabe15.qn/sells_nabe15, there4 removing every word upto a dot to remain with only variable names that I put in CommCare.
+
+names(pdtsPrices2019) <- gsub(pattern = ".*\\.", replacement = "", x=names(pdtsPrices2019))
+
+# Having a final look at the variable names now
+names(pdtsPrices2019)
+
+# Checking for duplicate shop names
+pdtsPrices2019$dupAttendant <- is_duplicated(pdtsPrices2019$attendant)
+
+# Looking at the duplicate that we have
+pdtsPrices2019 %>% 
+  filter(pdtsPrices2019$dupAttendant == "TRUE")
+
+# The duplicate is not a name it is a "---" that CommCare brings if a qn is not filled, so for this case it is only coming from non consent shop attendants from two enumerators
+
+```
+
+## Nabe 15 Bean Seeds
+```{r surveyresults, warning=FALSE}
+#---------------------------------------------------------------------------------
+#                              1. Nabe 15 Bean Seeds
+#---------------------------------------------------------------------------------
+# Nabe 15 Packaged Prices
+packedNabe15 <- pdtsPrices2019 %>% 
+  filter(nabe15_packed == "Yes") %>%
+  ggplot(., aes(x = as.factor(nabe15_package), y = round(as.numeric(nabe15_packed_price), 0), col = nabe15_seedco)) +
+  geom_point(size = 3) + expand_limits(y=c(10000, 50000)) +
+  labs(title = "Prices of packed Nabe 15 Beans", y="prices in Ugx", x="Package Unit in Kgs") + theme_oaf()
+
+div(ggplotly(packedNabe15), align = "center")
+
+# Nabe 15 Unpacked Prices
+unPackedNabe15 <- pdtsPrices2019 %>% 
+  filter(nabe15_packed == "No") %>%
+  ggplot(., aes(x = as.factor("1"), y = round(as.numeric(nabe15_unpacked_price), 0), col = local_name_unpacked_nabe15)) +
+  geom_point(size = 3) +  expand_limits(y=c(1000, 5000)) +
+  labs(title = "Prices of Un-packed Nabe 15 Beans", y="prices in Ugx", x="Package Unit in Kgs") + theme_oaf() + theme(legend.position = "none")
+
+div(ggplotly(unPackedNabe15), align = "center")
+```
+
+## Nabe 16 Beans seeds
+```{r nabe16, warning=FALSE}
+#---------------------------------------------------------------------------------
+#                              2. Nabe 16 Bean Seeds
+#---------------------------------------------------------------------------------
+# Nabe 16 Packaged Prices
+packedNabe16 <- pdtsPrices2019 %>% 
+  filter(packed_nabe16 == "Yes") %>%
+  ggplot(., aes(x = as.factor(nabe16_package), y = round(as.numeric(nabe16_packed_price), 0), col = nabe16_seedco)) +
+  geom_point(size = 3) + expand_limits(y=c(10000, 50000)) +
+  labs(title = "Prices of packed Nabe 16 Beans", y="prices in Ugx", x= "Package Unit in Kgs") + theme_oaf()
+
+div(ggplotly(packedNabe16), align = "center")
+
+# Nabe 15 Unpacked Prices
+unPackedNabe16 <- pdtsPrices2019 %>% 
+  filter(packed_nabe16 == "No") %>%
+  ggplot(., aes(x = as.factor("1"), y = round(as.numeric(nabe15_unpacked_price), 0), col =local_name_unpacked_nabe16)) +
+  geom_point(size = 3) + expand_limits(y=c(1000, 5000)) +
+  labs(title = "Prices of Un-packed Nabe 16 Beans", y="prices in Ugx", x="Package Unit in Kgs") + theme_oaf()
+
+div(ggplotly(unPackedNabe16), align = "center")
+```
+
+## Red Beauty Groundnuts seeds
+```{r RBGnuts, warning=FALSE}
+
+#--------------------------------------------------------------------------------
+#                           3. Red Beauty Groundnuts Seeds
+#--------------------------------------------------------------------------------
+# Red Beauty Ground-nuts
+packedRB <- pdtsPrices2019 %>% 
+  filter(packed_RB == "Yes") %>%
+  ggplot(., aes(x = as.factor(RB_package), y = round(as.numeric(rb_packed_price), 0), col = RB_seedco)) +
+  geom_point(size = 3) + expand_limits(y=c(5000, 10000)) +
+  labs(title = "Prices of Packed Red-Beauty Ground-Nuts", y="prices in Ugx", x= "Package Unit in Kgs") + theme_oaf()
+
+div(ggplotly(packedRB), align = "center")
+
+# Red-Beauty Unpacked Prices
+unPackedRB <- pdtsPrices2019 %>% 
+  filter(packed_RB == "No") %>%
+  ggplot(., aes(x = as.factor("1"), y = round(as.numeric(rb_unpacked_price), 0), col =rb_local_name_unpacked)) +
+  geom_point(size = 3) + expand_limits(y=c(1000, 5000)) +
+  labs(title = "Prices of Un-Packed Red-Beauty Ground-Nuts", y="prices in Ugx", x="Package Unit in Kgs") + theme_oaf()
+
+div(ggplotly(unPackedRB), align = "center")
+```
+
+## Sukuma Wiki
+```{r sukuma, warning=FALSE}
+#---------------------------------------------------------------------------------
+#                          4. Sukuma Wiki                     
+#---------------------------------------------------------------------------------
+# Sells Sukuma Wiki
+Sukumadata <- pdtsPrices2019 %>% 
+  filter(sells_sukuma == "Yes")
+
+sukuma <- pdtsPrices2019 %>% 
+  filter(sells_sukuma == "Yes") %>%
+  ggplot(., aes(x = as.factor(sukuma_unit_gms), y = round(as.numeric(sukuma_prices), 0))) + geom_boxplot() +
+  geom_point(data = Sukumadata, aes(colour = sukuma_seedco)) + 
+  expand_limits(y = c(0,8000)) +
+  labs(title = "Prices of Sukuma-Wiki Seeds", y="prices in Ugx", x= "Package Unit in Grams") + theme_oaf()
+
+div(ggplotly(sukuma), align = "center")
+```
+
+## Bazooka Maize Seeds
+```{r Bazooka, warning=FALSE}
+#---------------------------------------------------------------------------------
+#                          5. Bazooka Maize Seeds                   
+#---------------------------------------------------------------------------------
+# Sells Sukuma Wiki
+bazooka <- pdtsPrices2019 %>% 
+  filter(bazooka_packed == "Yes")
+
+bazookaPrices <- pdtsPrices2019 %>% 
+  filter(bazooka_packed == "Yes") %>%
+  ggplot(., aes(x = as.factor(bazooka_package), y = as.numeric(bazooka_packed_price))) + geom_boxplot() +
+  geom_point(data = bazooka, aes(colour = bazooka_seedco)) + 
+  labs(title = "Prices of Bazooka Seeds", y="prices in Ugx", x= "Package Unit in Kilograms") + theme_oaf()
+
+div(ggplotly(bazookaPrices), align = "center")
+```
+
+## Longe10H-IR Maize Seeds
+```{r Longe10H_IR, warning=FALSE}
+#---------------------------------------------------------------------------------
+#                          6. Longe10H-IR Maize Seeds                   
+#---------------------------------------------------------------------------------
+# Sells Sukuma Wiki
+longe10hir <- pdtsPrices2019 %>% 
+  filter(longe10HIR_packed == "Yes")
+
+longe10hirPrices <- pdtsPrices2019 %>% 
+  filter(longe10HIR_packed == "Yes") %>%
+  ggplot(., aes(x = as.factor(longe10HIR_package), y = as.numeric(longe10HIR_packed_price))) + geom_boxplot() +
+  geom_point(data = longe10hir, aes(colour = longe10HIR_seedco)) + 
+  labs(title = "Prices of Longe10H-IR Seeds", y="prices in Ugx", x= "Package Unit in Kilograms") + theme_oaf()
+
+div(ggplotly(longe10hirPrices), align = "center")
+```
+
+## DAP Fertilizer
+```{r DAP, warning=FALSE}
+#-------------------------------------------------------------------------------
+#                           7. DAP-Fertizer
+#-------------------------------------------------------------------------------
+# Sells DAP Fertizer
+DAP <- pdtsPrices2019 %>% 
+  filter(sells_DAP == "Yes")
+
+DAPFertizer <- pdtsPrices2019 %>% 
+  filter(sells_DAP == "Yes") %>%
+  ggplot(., aes(x = as.factor(DAP_package), y = round(as.numeric(DAP_price), 0))) + geom_boxplot() +
+  geom_point(data = DAP, aes(colour = DAP_co)) + 
+  labs(title = "Prices of DAP Fertilizer", y="prices in Ugx", x= "Package Unit in Kilograms") + theme_oaf()
+
+div(ggplotly(DAPFertizer), align = "center")
+```
+
+## Urea Fertizer
+```{r Urea, warning=FALSE}
+#-------------------------------------------------------------------------------
+#                         8. Urea-Fertizer
+#-------------------------------------------------------------------------------
+# Sells DAP Fertizer
+Urea <- pdtsPrices2019 %>% 
+  filter(sells_Urea == "Yes")
+
+UreaFertizer <- pdtsPrices2019 %>% 
+  filter(sells_Urea == "Yes") %>%
+  ggplot(., aes(x = as.factor(Urea_package), y = as.numeric(Urea_price))) + geom_boxplot() +
+  geom_point(data = Urea, aes(colour = Urea_co)) + 
+  labs(title = "Prices of Urea Fertilizer", y = "prices in Ugx", x= "Package Unit in Kilograms") + theme_oaf()
+
+div(ggplotly(UreaFertizer), align = "center")
+```
+
+## NPK-Fertilizer
+```{r NPK, warning=FALSE}
+#-------------------------------------------------------------------------------
+#                         9. NPK-Fertizer
+#-------------------------------------------------------------------------------
+# Sells DAP Fertizer
+NPK <- pdtsPrices2019 %>% 
+  filter(sells_NPK == "Yes")
+
+NPKFertizer <- pdtsPrices2019 %>% 
+  filter(sells_NPK == "Yes") %>%
+  ggplot(., aes(x = as.factor(NPK_package), y = round(as.numeric(NPK_price), 0))) + geom_boxplot() +
+  geom_point(data = NPK, aes(colour = NPK_co)) + 
+  labs(title = "Prices of NPK Fertilizer", y="prices in Ugx", x= "Package Unit in Kilograms") + theme_oaf()
+
+div(ggplotly(NPKFertizer), align = "center")
+```
+
+## Hoes
+```{r Hoes, warning=FALSE}
+#-------------------------------------------------------------------------------
+#                       10. Hoes
+#-------------------------------------------------------------------------------
+# Sells Hoes
+hoes <- pdtsPrices2019 %>% 
+  filter(sells_hoes == "Yes")
+
+hoesPrices <- pdtsPrices2019 %>% 
+  filter(sells_hoes == "Yes") %>%
+  ggplot(., aes(x = as.factor("1 Hoe"), y = round(as.numeric(hoe_price), 0))) + geom_boxplot() +
+  geom_point(data = hoes, aes(colour = hoe_brand)) + expand_limits(y = c (6000,12000)) +
+  labs(title = "Prices of Hoes in Ugx", y="prices in Ugx", x= "") + theme_oaf()
+
+div(ggplotly(hoesPrices), align = "center")
+```
+
+## Pangas
+```{r pangas, warning=FALSE}
+#-------------------------------------------------------------------------------
+#                       11. Pangas
+#-------------------------------------------------------------------------------
+# Sells Pangas
+pangas <- pdtsPrices2019 %>% 
+  filter(sells_pangas == "Yes")
+
+pangasPrices <- pdtsPrices2019 %>% 
+  filter(sells_pangas == "Yes") %>%
+  ggplot(., aes(x = as.factor("1 Panga"), y = round(as.numeric(panga_price), 0), fill =  as.factor("1 Panga"))) + geom_boxplot() +
+  geom_point(data = pangas, aes(colour = pangas_brand)) + expand_limits(y = c (6000,12000)) +
+  labs(title = "Prices of Pangas in Ugx", y="prices in Ugx", x= "") + theme_oaf()
+
+div(ggplotly(pangasPrices), align = "center")
+```
+
+## Gumboots
+```{r gumboots, warning=FALSE}
+#-------------------------------------------------------------------------------
+#                      12. Gumboots
+#-------------------------------------------------------------------------------
+# Sells Gumboots
+gumboots <- pdtsPrices2019 %>% 
+  filter(sells_gumboots == "Yes")
+
+gumbootsPrices <- pdtsPrices2019 %>% 
+  filter(sells_gumboots == "Yes") %>%
+  ggplot(., aes(x = as.factor("1 Pair of Gumboots"), y = round(as.numeric(gumboot_price), 0), fill = as.factor("1 Pair of Gumboots"))) + geom_boxplot() +
+  geom_point(data = gumboots, aes(colour = gumboots_brand)) + theme(legend.position = "none") + 
+  labs(title = "Prices of Gumboots in Ugx", y="prices in Ugx", x= "") + theme_oaf()
+
+div(ggplotly(gumbootsPrices), align = "center")
+```
